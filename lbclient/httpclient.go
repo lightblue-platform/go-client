@@ -3,27 +3,17 @@ package lbclient
 import (
 	"bytes"
 	"crypto/tls"
-	//	"crypto/x509"
 	"encoding/json"
-	"encoding/pem"
-	"golang.org/x/crypto/pkcs12"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 )
 
-type BasicAuthConfig struct {
-	UserName string
-	Password string
-}
-
-type CertAuthConfig struct {
+type PEMCertAuthConfig struct {
 	// Certificate file, PEM
 	PEMCertFile string
-	// Private key file,  PKCS12 if not contained in certificate
-	PrivateKeyFile string
-	CertAlias      string
-	CertPassword   string
+	// Private key file, PEM
+	PEMPrivateKeyFile string
 }
 
 type AuthConfig interface {
@@ -47,41 +37,26 @@ type HttpClient struct {
 	Client    *http.Client
 }
 
-func (c *CertAuthConfig) BuildTransport(t *http.Transport) error {
-}
-
-func ReadPEMFile(file string) ([]pem.Block, error) {
-	blocks := make([]pem.Block, 0)
-
-	inp, err := ioutil.ReadFile(file)
+func (c *PEMCertAuthConfig) BuildTransport(t *http.Transport) error {
+	cert, err := tls.LoadX509KeyPair(c.PEMCertFile, c.PEMPrivateKeyFile)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	done := false
-	for !done {
-		var blk *pem.Block
-		blk, inp = pem.Decode(inp)
-		if blk != nil {
-			blocks = append(blocks, *blk)
-		} else {
-			done = true
-		}
-	}
-	return blocks, nil
-}
-
-func ReadPKCS12File(file string, password string) ([]*pem.Block, error) {
-	inp, err := ioutil.ReadFile(file)
-	if err != nil {
-		return nil, err
-	}
-	return pkcs12.ToPEM(inp, password)
+	tlsConfig := &tls.Config{Certificates: []tls.Certificate{cert}}
+	tlsConfig.BuildNameToCertificate()
+	t.TLSClientConfig = tlsConfig
+	return nil
 }
 
 func NewHttpClient(config *HttpClientConfig) *HttpClient {
 	var cli HttpClient
 	cli.Config = config
 	cli.Transport = &http.Transport{}
+	if cli.Config.AuthConfig != nil {
+		if err := cli.Config.AuthConfig.BuildTransport(cli.Transport); err != nil {
+			panic("Cannot build transport:" + err.Error())
+		}
+	}
 	cli.Client = &http.Client{Transport: cli.Transport}
 	return &cli
 }
@@ -93,15 +68,7 @@ func (c *HttpClient) Call(url *url.URL, httpMethod string, body []byte) ([]byte,
 	}
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Accept", "application/json")
-	cli := &http.Client{}
-	var transport http.Transport
-	if c.Config.AuthConfig != nil {
-		if err = c.Config.AuthConfig.BuildTransport(&transport); err != nil {
-			return nil, err
-		}
-		cli.Transport = &transport
-	}
-	resp, err := cli.Do(req)
+	resp, err := c.Client.Do(req)
 	if err != nil {
 		return nil, err
 	}
