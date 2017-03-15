@@ -22,10 +22,10 @@ type Response struct {
 	MatchCount     int      `json:"matchCount"`
 	TaskHandle     string
 	Session        string
-	ResultMetadata []ResultMd               `json:"resultMetadata"`
-	EntityData     []map[string]interface{} `json:"processed"`
-	DataErrors     []DataError              `json:"dataErrors"`
-	Errors         []RequestError           `json:"errors"`
+	ResultMetadata []ResultMd     `json:"resultMetadata"`
+	EntityData     interface{}    `json:"processed"`
+	DataErrors     []DataError    `json:"dataErrors"`
+	Errors         []RequestError `json:"errors"`
 }
 
 func (r *Response) String() string {
@@ -39,7 +39,7 @@ type ResultMd struct {
 	DocumentVersion string `json:"documentVersion"`
 }
 
-func (r *ResultMd) String() string {
+func (r ResultMd) String() string {
 	return fmt.Sprintf("docver: %s", r.DocumentVersion)
 }
 
@@ -54,6 +54,6 @@ type RequestError struct {
 	Msg       string `json:"msg"`
 }
 
-func (r *RequestError) String() string {
+func (r RequestError) String() string {
 	return fmt.Sprintf("ctx: %s, err: %s, msg: %s", r.Context, r.ErrorCode, r.Msg)
 }

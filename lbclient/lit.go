@@ -6,9 +6,10 @@ import (
 	"time"
 )
 
+// DATEFORMAT is the date format used by lightblue server
 const DATEFORMAT = "20060102T15:04:05.000-0700"
 
-// Opaque structure for literal values
+// Literal is an opaque structure for literal values
 type Literal struct {
 	i     int
 	s     string
@@ -18,42 +19,42 @@ type Literal struct {
 	which int
 }
 
-// Makes a literal integer
+// LitInt makes a literal integer
 func LitInt(n int) Literal {
 	return Literal{i: n, which: 0}
 }
 
-// Makes a literal string
+// LitStr makes a literal string
 func LitStr(str string) Literal {
 	return Literal{s: str, which: 1}
 }
 
-// Makes a literal double number
+// LitDouble makes a literal double number
 func LitDouble(n float32) Literal {
 	return Literal{d: n, which: 2}
 }
 
-// Makes a literal boolean
+// LitBool makes a literal boolean
 func LitBool(v bool) Literal {
 	return Literal{b: v, which: 3}
 }
 
-// Makes a literal date
+// LitDate makes a literal date
 func LitDate(t time.Time) Literal {
 	return Literal{s: t.Format(DATEFORMAT), which: 1}
 }
 
-// Makes a literal JSON value
+// LitJson makes a literal JSON value
 func LitJson(v []byte) Literal {
 	return Literal{j: v, which: 4}
 }
 
-// Makes a null value
+// LitNull makes a null value
 func LitNull() Literal {
 	return Literal{which: -1}
 }
 
-// Marshals a literal value to json
+// MarshalJSON returns JSON representation of a  literal value
 func (l Literal) MarshalJSON() ([]byte, error) {
 	switch l.which {
 	case 0:
@@ -71,32 +72,32 @@ func (l Literal) MarshalJSON() ([]byte, error) {
 	}
 }
 
-// Returns a string representation of literal value
+// String returns a string representation of literal value
 func (l Literal) String() string {
 	b, _ := l.MarshalJSON()
 	return string(b)
 }
 
-// Represents a {valueof: field} construct
+// ValueOf represents a {valueof: field} construct. Use ValueOfField to instantiate
 type ValueOf struct {
 	field string
 }
 
-// Makes a {valueof:f} construct
+// ValueOfField makes a {valueof:f} construct
 func ValueOfField(f string) ValueOf {
 	return ValueOf{field: f}
 }
 
-// Either a literal value, or a {valueof:field}
+// RValue is either a literal value, or a {valueof:field}
 type RValue interface {
 
-	// Returns if this is a literal, false if this is a {valueof:f}
+	// IsLiteral returns if this is a literal, false if this is a {valueof:f}
 	IsLiteral() bool
-	// Returns the literal value, or panic if this is a {valueof:f}
+	// GetLiteral returns the literal value, or panic if this is a {valueof:f}
 	GetLiteral() Literal
-	// Returns the field of {valueof:f}, or panics if this is  a literal
+	// GetValueOfField returns the field of {valueof:f}, or panics if this is  a literal
 	GetValueOfField() string
-
+	// String returns the string representation of RValue
 	String() string
 }
 
