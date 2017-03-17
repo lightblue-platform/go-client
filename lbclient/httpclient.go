@@ -5,7 +5,6 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -147,10 +146,11 @@ func (c *HttpClient) DataCall(header *RequestHeader, body []byte, data reflect.T
 	response.DataErrors = unmarshalDataErrors(mr.DataErrors)
 	response.ResultMetadata = unmarshalRmd(mr.ResultMetadata)
 	if mr.EntityData != nil {
-		fmt.Printf("ed:%q\n", reflect.TypeOf(mr.EntityData))
 		t, ok := mr.EntityData.([]map[string]interface{})
 		if ok {
 			response.EntityData = t
+		} else if data == nil {
+			response.EntityData = mr.EntityData
 		} else {
 			// We are using allocated slice
 			ed := reflect.ValueOf(mr.EntityData).Elem().Interface()

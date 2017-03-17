@@ -67,10 +67,10 @@ type RequestHeader struct {
 
 type FindRequest struct {
 	RequestHeader
-	Q Query
-	P Projection
-	S Sort
-	R Range
+	Q *Query
+	P *Projection
+	S *Sort
+	R *Range
 }
 
 type projectionAndRange interface {
@@ -78,9 +78,13 @@ type projectionAndRange interface {
 	getRange() *Range
 }
 
-func (f *FindRequest) getProjection() *Projection { return &f.P }
+type MapConvertable interface {
+	AsMap() interface{}
+}
 
-func (f *FindRequest) getRange() *Range { return &f.R }
+func (f *FindRequest) getProjection() *Projection { return f.P }
+
+func (f *FindRequest) getRange() *Range { return f.R }
 
 func (r *RequestHeader) marshal(m map[string]interface{}) {
 	if len(r.EntityName) != 0 {
@@ -98,11 +102,11 @@ func (r *RequestHeader) marshal(m map[string]interface{}) {
 }
 
 func marshalProjectionAndRange(r projectionAndRange, m map[string]interface{}) {
-	if !r.getProjection().Empty() {
-		m["projection"] = *r.getProjection()
+	if r.getProjection() != nil && !r.getProjection().Empty() {
+		m["projection"] = *(r.getProjection())
 	}
-	if !r.getRange().IsAll() {
-		m["range"] = *r.getRange()
+	if r.getRange() != nil && !r.getRange().IsAll() {
+		m["range"] = *(r.getRange())
 	}
 }
 
@@ -111,24 +115,26 @@ func (f *FindRequest) MarshalJSON() ([]byte, error) {
 	m := make(map[string]interface{})
 	f.RequestHeader.marshal(m)
 	marshalProjectionAndRange(f, m)
-	if !f.Q.Empty() {
-		m["query"] = f.Q
+	if f.Q != nil && !f.Q.Empty() {
+		m["query"] = *(f.Q)
 	}
-	if !f.S.Empty() {
-		m["sort"] = f.S
+	if f.S != nil && !f.S.Empty() {
+		m["sort"] = *(f.S)
 	}
-	return json.Marshal(m)
+	b, e := json.Marshal(m)
+	return b, e
 }
 
+// InsertRequest is used to insert documents to the database.
 type InsertRequest struct {
 	RequestHeader
-	P       Projection
-	R       Range
+	P       *Projection
+	R       *Range
 	DocData json.RawMessage
 }
 
 // MakeDocData builds document data needed for InsertRequest and
-// SaveRequest from actual objects, maps, or []byte.
+// SaveRequest from actual objects, maps, or raw json ([]byte)
 //
 // * If v is nil, MakeDocData returns nil
 // * If v is a []byte, it assumes the documents are already JSON encoded, and returns v
@@ -158,7 +164,7 @@ func MakeDocData(v interface{}) json.RawMessage {
 		var sliceData interface{}
 		if reflect.TypeOf(v).Kind() != reflect.Slice {
 			sliceVal := reflect.New(reflect.SliceOf(reflect.TypeOf(v))).Elem()
-			sliceVal=reflect.Append(sliceVal, reflect.ValueOf(v))
+			sliceVal = reflect.Append(sliceVal, reflect.ValueOf(v))
 			sliceData = sliceVal.Interface()
 		} else {
 			sliceData = v
@@ -171,38 +177,80 @@ func MakeDocData(v interface{}) json.RawMessage {
 	}
 }
 
-func (r *InsertRequest) getProjection() *Projection { return &r.P }
+func (r *InsertRequest) getProjection() *Projection { return r.P }
 
-func (r *InsertRequest) getRange() *Range { return &r.R }
+func (r *InsertRequest) getRange() *Range { return r.R }
 
 func (r *InsertRequest) MarshalJSON() ([]byte, error) {
 	m := make(map[string]interface{})
 	r.RequestHeader.marshal(m)
 	marshalProjectionAndRange(r, m)
+	m["data"] = r.DocData
 	return json.Marshal(m)
 }
 
 type SaveRequest struct {
 	RequestHeader
-	P                Projection
-	R                Range
+	P                *Projection
+	R                *Range
 	DocData          json.RawMessage
 	Upsert           bool
 	IfCurrentOnly    bool
 	DocumentVersions []string
 }
 
+func (r *SaveRequest) getProjection() *Projection { return r.P }
+
+func (r *SaveRequest) getRange() *Range { return r.R }
+
+func (r *SaveRequest) MarshalJSON() ([]byte, error) {
+	m := make(map[string]interface{})
+	r.RequestHeader.marshal(m)
+	marshalProjectionAndRange(r, m)
+	m["data"] = r.DocData
+	m["upsert"] = r.Upsert
+	if r.IfCurrentOnly {
+		m["onlyIfCurrent"] = true
+		m["documentVersions"] = r.DocumentVersions
+	}
+	return json.Marshal(m)
+}
+
 type DeleteRequest struct {
 	RequestHeader
-	Q Query
+	Q *Query
+}
+
+func (r *DeleteRequest) MarshalJSON() ([]byte, error) {
+	m := make(map[string]interface{})
+	r.RequestHeader.marshal(m)
+	m["query"] = *(r.Q)
+	return json.Marshal(m)
 }
 
 type UpdateRequest struct {
 	RequestHeader
-	Q                Query
-	U                Update
-	P                Projection
-	R                Range
+	Q                *Query
+	U                *Update
+	P                *Projection
+	R                *Range
 	IfCurrentOnly    bool
 	DocumentVersions []string
+}
+
+func (r *UpdateRequest) getProjection() *Projection { return r.P }
+
+func (r *UpdateRequest) getRange() *Range { return r.R }
+
+func (r *UpdateRequest) MarshalJSON() ([]byte, error) {
+	m := make(map[string]interface{})
+	r.RequestHeader.marshal(m)
+	marshalProjectionAndRange(r, m)
+	m["query"] = *(r.Q)
+	m["update"] = *(r.U)
+	if r.IfCurrentOnly {
+		m["onlyIfCurrent"] = true
+		m["documentVersions"] = r.DocumentVersions
+	}
+	return json.Marshal(m)
 }

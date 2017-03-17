@@ -11,7 +11,7 @@ func TestFindRequest(t *testing.T) {
 		CmpValue("field1", EQ, LitStr("str")))
 
 	p := MakeProjection(IncludeTree("*"))
-	req := FindRequest{RequestHeader: RequestHeader{EntityName: "test"}, Q: q, P: p, R: EMPTYRANGE}
+	req := FindRequest{RequestHeader: RequestHeader{EntityName: "test"}, Q: q, P: p, R: &EMPTYRANGE}
 
 	b, err := json.Marshal(&req)
 	if err != nil {

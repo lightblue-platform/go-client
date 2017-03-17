@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func print3(q Query) {
+func print3(q *Query) {
 	var valueName string
 	var value interface{}
 	if v, ok := q.q["rvalue"]; ok {
@@ -103,11 +103,10 @@ func TestNot(t *testing.T) {
 	if !ok {
 		t.Error("Cannot get $not")
 	}
-	m = n
-	if m.q["field"] != "field" ||
-		m.q["op"] != IN ||
-		m.q["rfield"] != "field2" {
-		t.Errorf("%q", m)
+	if n.q["field"] != "field" ||
+		n.q["op"] != IN ||
+		n.q["rfield"] != "field2" {
+		t.Errorf("%q", n)
 	}
 }
 
@@ -120,16 +119,14 @@ func TestAnd(t *testing.T) {
 	if len(n) != 2 {
 		t.Error("Expecting 2 subqueries")
 	}
-	m = n[0]
-	if m.q["field"] != "field" ||
-		m.q["op"] != IN ||
-		m.q["rfield"] != "field2" {
+	if n[0].q["field"] != "field" ||
+		n[0].q["op"] != IN ||
+		n[0].q["rfield"] != "field2" {
 		t.Errorf("%q", m)
 	}
-	m = n[1]
-	if m.q["field"] != "field" ||
-		m.q["op"] != EQ ||
-		m.q["rvalue"].(Literal).String() != "\"string value\"" {
+	if n[1].q["field"] != "field" ||
+		n[1].q["op"] != EQ ||
+		n[1].q["rvalue"].(Literal).String() != "\"string value\"" {
 		t.Errorf("%q", m)
 	}
 }
@@ -143,16 +140,14 @@ func TestOr(t *testing.T) {
 	if len(n) != 2 {
 		t.Error("Expecting 2 subqueries")
 	}
-	m = n[0]
-	if m.q["field"] != "field" ||
-		m.q["op"] != IN ||
-		m.q["rfield"] != "field2" {
+	if n[0].q["field"] != "field" ||
+		n[0].q["op"] != IN ||
+		n[0].q["rfield"] != "field2" {
 		t.Errorf("%q", m)
 	}
-	m = n[1]
-	if m.q["field"] != "field" ||
-		m.q["op"] != EQ ||
-		m.q["rvalue"].(Literal).String() != "\"string value\"" {
+	if n[1].q["field"] != "field" ||
+		n[1].q["op"] != EQ ||
+		n[1].q["rvalue"].(Literal).String() != "\"string value\"" {
 		t.Errorf("%q", m)
 	}
 }
@@ -183,10 +178,10 @@ func TestArrayMatch(t *testing.T) {
 	if m.q["array"] != "field" {
 		t.Errorf("%q", m)
 	}
-	m, _ = m.q["elemMatch"].(Query)
-	if m.q["field"] != "field" ||
-		m.q["op"] != EQ ||
-		m.q["rvalue"].(Literal).String() != "123" {
+	x, _ := m.q["elemMatch"].(Query)
+	if x.q["field"] != "field" ||
+		x.q["op"] != EQ ||
+		x.q["rvalue"].(Literal).String() != "123" {
 		t.Errorf("%q", m)
 	}
 }

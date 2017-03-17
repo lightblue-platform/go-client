@@ -16,14 +16,18 @@ func (p *Projection) Empty() bool {
 	return p.p == nil || len(p.p) == 0
 }
 
-// MarshalJSON returns a JSON representation of the projection
-func (p Projection) MarshalJSON() ([]byte, error) {
+func (p *Projection) AsMap() interface{} {
 	var x []map[string]interface{}
 	x = make([]map[string]interface{}, len(p.p))
 	for i, item := range p.p {
 		x[i] = item.GetProjection()
 	}
-	return json.Marshal(x)
+	return x
+}
+
+// MarshalJSON returns a JSON representation of the projection
+func (p Projection) MarshalJSON() ([]byte, error) {
+	return json.Marshal(p.AsMap())
 }
 
 // The internal representation of each part of a projection
@@ -50,10 +54,10 @@ func (p FieldProjection) GetProjection() map[string]interface{} {
 }
 
 // MakeProjections makes a Projection object fron parts
-func MakeProjection(parts ...projectionPart) Projection {
+func MakeProjection(parts ...projectionPart) *Projection {
 	var p Projection
 	p.Add(parts...)
-	return p
+	return &p
 }
 
 // Add adds new parts to a Projection object

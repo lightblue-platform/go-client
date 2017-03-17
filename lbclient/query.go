@@ -60,10 +60,10 @@ func (q *Query) Empty() bool {
 //    { field: <field>, op:<op>, rvalue:<rvalue> }
 //
 // op is one of EQ, NEQ, LT, LTE, GT, GTE
-func CmpValue(field string, op RelationalOp, rvalue Literal) Query {
+func CmpValue(field string, op RelationalOp, rvalue Literal) *Query {
 	var ret Query
 	ret.q = map[string]interface{}{"field": field, "op": op, "rvalue": rvalue}
-	return ret
+	return &ret
 }
 
 // CmpValueList returns a query of the form
@@ -71,10 +71,10 @@ func CmpValue(field string, op RelationalOp, rvalue Literal) Query {
 //    { field: <field>, op:<op>, values:[<values>] }
 //
 // op is one of IN, NIN
-func CmpValueList(field string, op NaryOp, values []Literal) Query {
+func CmpValueList(field string, op NaryOp, values []Literal) *Query {
 	var ret Query
 	ret.q = map[string]interface{}{"field": field, "op": op, "values": values}
-	return ret
+	return &ret
 }
 
 // CmpValues returns a query of the form
@@ -82,10 +82,10 @@ func CmpValueList(field string, op NaryOp, values []Literal) Query {
 //    { field: <field>, op:<op>, values:[<values>] }
 //
 // op is one of IN, NIN
-func CmpValues(field string, op NaryOp, values ...Literal) Query {
+func CmpValues(field string, op NaryOp, values ...Literal) *Query {
 	var ret Query
 	ret.q = map[string]interface{}{"field": field, "op": op, "values": values}
-	return ret
+	return &ret
 }
 
 // CmpField returns a query of the form
@@ -93,10 +93,10 @@ func CmpValues(field string, op NaryOp, values ...Literal) Query {
 //    { field: <field>, op:<op>, rfield:<rfield> }
 //
 // op is one of EQ, NEQ, LT, LTE, GT, GTE
-func CmpField(field string, op RelationalOp, rfield string) Query {
+func CmpField(field string, op RelationalOp, rfield string) *Query {
 	var ret Query
 	ret.q = map[string]interface{}{"field": field, "op": op, "rfield": rfield}
-	return ret
+	return &ret
 }
 
 // CmpFieldValues returns a query of the form
@@ -104,67 +104,75 @@ func CmpField(field string, op RelationalOp, rfield string) Query {
 //    { field: <field>, op:<op>, rfield:<rfield> }
 //
 // op is one of IN, NIN
-func CmpFieldValues(field string, op NaryOp, rfield string) Query {
+func CmpFieldValues(field string, op NaryOp, rfield string) *Query {
 	var ret Query
 	ret.q = map[string]interface{}{"field": field, "op": op, "rfield": rfield}
-	return ret
+	return &ret
 }
 
 // Not returns a query of the form
 //
 //    { $not: {q} }
 //
-func Not(q Query) Query {
+func Not(q *Query) *Query {
 	var ret Query
-	ret.q = map[string]interface{}{"$not": q}
-	return ret
+	ret.q = map[string]interface{}{"$not": *q}
+	return &ret
+}
+
+func qarr(query []*Query) []Query {
+	arr := make([]Query, len(query))
+	for i, q := range query {
+		arr[i] = *q
+	}
+	return arr
 }
 
 // And returns a query of the form
 //
 //    { $and: [ <query> ] }
 //
-func And(query ...Query) Query {
+func And(query ...*Query) *Query {
 	var ret Query
-	ret.q = map[string]interface{}{"$and": query}
-	return ret
+	ret.q = map[string]interface{}{"$and": qarr(query)}
+	return &ret
 }
 
 // AndList returns a query of the form
 //
 //    { $and: [ <query> ] }
 //
-func AndList(query []Query) Query {
+func AndList(query []*Query) *Query {
 	var ret Query
-	ret.q = map[string]interface{}{"$and": query}
-	return ret
+	ret.q = map[string]interface{}{"$and": qarr(query)}
+	return &ret
 }
 
 // Or returns a query of the form
 //
 //    { $or: [ <query> ] }
 //
-func Or(query ...Query) Query {
+func Or(query ...*Query) *Query {
 	var ret Query
-	ret.q = map[string]interface{}{"$or": query}
-	return ret
+	ret.q = map[string]interface{}{"$or": qarr(query)}
+	return &ret
 }
 
 // OrList returns a query of the form
 //
 //    { $or: [ <query> ] }
 //
-func OrList(query []Query) Query {
+func OrList(query []*Query) *Query {
 	var ret Query
-	ret.q = map[string]interface{}{"$or": query}
-	return ret
+	ret.q = map[string]interface{}{"$or": qarr(query)}
+	return &ret
 }
 
 // CmpRegex returns a query of the form
 //
 // { field:<field>, regex: <pattern>, caseInsensitive: <option>, extended:<option>,multiline:<option>, dotall:<option>}
 //
-func CmpRegex(field string, pattern string, options RegexOptions) Query {
+func CmpRegex(field string, pattern string, options RegexOptions) *Query {
 	var ret Query
 	ret.q = map[string]interface{}{"field": field,
 		"regex": pattern}
@@ -180,7 +188,7 @@ func CmpRegex(field string, pattern string, options RegexOptions) Query {
 	if options.Dotall {
 		ret.q["dotall"] = true
 	}
-	return ret
+	return &ret
 }
 
 // ArryaContains returns a query of the form
@@ -188,10 +196,10 @@ func CmpRegex(field string, pattern string, options RegexOptions) Query {
 //  { array:<array>, contains: <op>, values:[<values>] }
 //
 // where op is one of ANY, ALL, NONE
-func ArrayContains(array string, op ArrayOp, values ...Literal) Query {
+func ArrayContains(array string, op ArrayOp, values ...Literal) *Query {
 	var ret Query
 	ret.q = map[string]interface{}{"array": array, "contains": op, "values": values}
-	return ret
+	return &ret
 }
 
 // Returns a query of the form
@@ -199,24 +207,24 @@ func ArrayContains(array string, op ArrayOp, values ...Literal) Query {
 //  { array:<array>, contains: <op>, values:[<values>] }
 //
 // where op is one of ANY, ALL, NONE
-func ArrayContainsList(array string, op ArrayOp, values []Literal) Query {
+func ArrayContainsList(array string, op ArrayOp, values []Literal) *Query {
 	var ret Query
 	ret.q = map[string]interface{}{"array": array, "contains": op, "values": values}
-	return ret
+	return &ret
 }
 
 // ArrayMatch returns a query of the form
 //
 //  { array:<array>, elemMatch: <elemMatch> }
 //
-func ArrayMatch(array string, elemMatch Query) Query {
+func ArrayMatch(array string, elemMatch *Query) *Query {
 	var ret Query
-	ret.q = map[string]interface{}{"array": array, "elemMatch": elemMatch}
-	return ret
+	ret.q = map[string]interface{}{"array": array, "elemMatch": *elemMatch}
+	return &ret
 }
 
 // String returns a string representation of athe query
-func (q Query) String() string {
+func (q *Query) String() string {
 	x, _ := q.MarshalJSON()
 	return string(x)
 }
