@@ -40,15 +40,10 @@ func (s *Sort) Empty() bool {
 	return s.Keys == nil || len(s.Keys) == 0
 }
 
-// SortBy constructs a sort using a map field:dir where dir<0 means
-// sort descending, and dir>=0 means sort ascending
-func SortBy(fields map[string]int) Sort {
-	var sort Sort
-	for key, value := range fields {
-		sk := SortKey{key, value < 0}
-		sort.Keys = append(sort.Keys, sk)
-	}
-	return sort
+// String returns string representation of the sort
+func (s Sort) String() string {
+	x, _ := s.MarshalJSON()
+	return string(x)
 }
 
 // MarshalJSON returns the JSON representation of a Sort object

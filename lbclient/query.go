@@ -2,7 +2,6 @@ package lbclient
 
 import (
 	"encoding/json"
-	"fmt"
 )
 
 // RegexOptions is a structure used to construct regular expression search predicates using additional options.
@@ -168,11 +167,19 @@ func OrList(query []Query) Query {
 func CmpRegex(field string, pattern string, options RegexOptions) Query {
 	var ret Query
 	ret.q = map[string]interface{}{"field": field,
-		"regex":           pattern,
-		"caseInsensitive": options.CaseInsensitive,
-		"extended":        options.Extended,
-		"multiline":       options.Multiline,
-		"dotall":          options.Dotall}
+		"regex": pattern}
+	if options.CaseInsensitive {
+		ret.q["caseInsensitive"] = true
+	}
+	if options.Extended {
+		ret.q["extended"] = true
+	}
+	if options.Multiline {
+		ret.q["multiline"] = true
+	}
+	if options.Dotall {
+		ret.q["dotall"] = true
+	}
 	return ret
 }
 
@@ -210,7 +217,8 @@ func ArrayMatch(array string, elemMatch Query) Query {
 
 // String returns a string representation of athe query
 func (q Query) String() string {
-	return fmt.Sprintf("%s", q.q)
+	x, _ := q.MarshalJSON()
+	return string(x)
 }
 
 // MarshalJSON returns the JSON representation for the query

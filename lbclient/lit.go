@@ -24,9 +24,27 @@ func LitInt(n int) Literal {
 	return Literal{i: n, which: 0}
 }
 
+// LitInts returns a literal int array
+func LitInts(values ...int) []Literal {
+	ret := make([]Literal, len(values))
+	for i, v := range values {
+		ret[i] = LitInt(v)
+	}
+	return ret
+}
+
 // LitStr makes a literal string
 func LitStr(str string) Literal {
 	return Literal{s: str, which: 1}
+}
+
+// LitStrs returns a literal string array
+func LitStrs(str ...string) []Literal {
+	ret := make([]Literal, len(str))
+	for i, s := range str {
+		ret[i] = LitStr(s)
+	}
+	return ret
 }
 
 // LitDouble makes a literal double number
@@ -34,14 +52,41 @@ func LitDouble(n float32) Literal {
 	return Literal{d: n, which: 2}
 }
 
+// LitDoubles returns a literal double array
+func LitDoubles(values ...float32) []Literal {
+	ret := make([]Literal, len(values))
+	for i, v := range values {
+		ret[i] = LitDouble(v)
+	}
+	return ret
+}
+
 // LitBool makes a literal boolean
 func LitBool(v bool) Literal {
 	return Literal{b: v, which: 3}
 }
 
+// LitBools returns a literal boolean array
+func LitBools(values ...bool) []Literal {
+	ret := make([]Literal, len(values))
+	for i, b := range values {
+		ret[i] = LitBool(b)
+	}
+	return ret
+}
+
 // LitDate makes a literal date
 func LitDate(t time.Time) Literal {
 	return Literal{s: t.Format(DATEFORMAT), which: 1}
+}
+
+// LitDates returns a literal date array
+func LitDates(values ...time.Time) []Literal {
+	ret := make([]Literal, len(values))
+	for i, v := range values {
+		ret[i] = LitDate(v)
+	}
+	return ret
 }
 
 // LitJson makes a literal JSON value

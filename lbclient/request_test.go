@@ -25,3 +25,42 @@ func TestFindRequest(t *testing.T) {
 	}
 
 }
+
+type MakeDocDataTestStruct struct {
+	StringValue string                  `json:"stringValue"`
+	IntValue    int                     `json:"intValue"`
+	StringArray []string                `json:"stringArray"`
+	ObjArray    []MakeDocDataTestStruct `json:"objArray"`
+}
+
+func TestMakeDocData(t *testing.T) {
+	td := MakeDocDataTestStruct{StringValue: "strvalue",
+		IntValue:    123,
+		StringArray: []string{"1", "2", "3"},
+		ObjArray: []MakeDocDataTestStruct{MakeDocDataTestStruct{StringValue: "nestedStr",
+			IntValue: 234}}}
+	raw := MakeDocData(td)
+	var r []map[string]interface{}
+	json.Unmarshal([]byte(raw), &r)
+	if r[0]["stringValue"].(string) != "strvalue" ||
+		r[0]["intValue"].(float64) != 123 ||
+		r[0]["stringArray"].([]interface{})[0].(string) != "1" ||
+		r[0]["stringArray"].([]interface{})[1].(string) != "2" ||
+		r[0]["stringArray"].([]interface{})[2].(string) != "3" ||
+		r[0]["objArray"].([]interface{})[0].(map[string]interface{})["stringValue"].(string) != "nestedStr" ||
+		r[0]["objArray"].([]interface{})[0].(map[string]interface{})["intValue"].(float64) != 234 {
+		t.Errorf("%q\n", r)
+	}
+}
+
+func TestMakeDocDataWithMap(t *testing.T) {
+	td := map[string]string{"string1": "str1",
+		"string2": "str2"}
+	raw := MakeDocData(td)
+	var r []map[string]string
+	json.Unmarshal([]byte(raw), &r)
+	if r[0]["string1"] != "str1" ||
+		r[0]["string2"] != "str2" {
+		t.Errorf("%q\n", r)
+	}
+}
