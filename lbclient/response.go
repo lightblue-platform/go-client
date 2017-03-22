@@ -57,3 +57,7 @@ type RequestError struct {
 func (r RequestError) String() string {
 	return fmt.Sprintf("ctx: %s, err: %s, msg: %s", r.Context, r.ErrorCode, r.Msg)
 }
+
+func (r RequestError) Error() string {
+	return r.String()
+}

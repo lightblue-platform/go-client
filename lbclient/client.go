@@ -1,11 +1,11 @@
 package lbclient
 
-import (
-	"net/url"
-)
+import ()
 
 type LBClient interface {
-	Call(url *url.URL, httpMethod string, body []byte) ([]byte, error)
-	DataCall(header *RequestHeader, body []byte, operation string, httpMethod string) (*Response, error)
-	Find(request *FindRequest) (*Response, error)
+	Find(request *FindRequest, data interface{}) (*Response, error)
+	Insert(request *InsertRequest, data interface{}) (*Response, error)
+	Update(request *UpdateRequest, data interface{}) (*Response, error)
+	Save(request *SaveRequest, data interface{}) (*Response, error)
+	Delete(request *DeleteRequest) (*Response, error)
 }
