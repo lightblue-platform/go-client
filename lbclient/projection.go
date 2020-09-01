@@ -158,7 +158,7 @@ func ExcludeRange(fld string, r [2]int, projection *Projection, sort *Sort) Rang
 
 // GetProjection returns the map representation of the range projection
 func (p RangeProjection) GetProjection() map[string]interface{} {
-	var ret map[string]interface{}
+	ret := make(map[string]interface{}, 5)
 	ret["field"] = p.field
 	ret["include"] = p.include
 	ret["range"] = p.rng
@@ -205,7 +205,7 @@ func ExcludeMatching(fld string, match Query, projection *Projection, sort *Sort
 
 // GetProjection returns the map representation of the match projection
 func (p MatchProjection) GetProjection() map[string]interface{} {
-	var ret map[string]interface{}
+	ret := make(map[string]interface{}, 5)
 	ret["field"] = p.field
 	ret["include"] = p.include
 	ret["match"] = p.q
